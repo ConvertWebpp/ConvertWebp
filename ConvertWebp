@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Convertidor WEBP a PNG</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1f1f1f, #2b2b2b);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 15px;
+    }
+
+    .upload-box {
+      background: #292929;
+      border: 2px dashed #555;
+      border-radius: 16px;
+      padding: 40px;
+      width: 350px;
+      text-align: center;
+      transition: 0.3s;
+    }
+
+    .upload-box.dragover {
+      border-color: #00ff9d;
+      background: #333;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    label {
+      display: inline-block;
+      background: linear-gradient(90deg, #ff6b6b, #ffb86b, #00ff9d);
+      background-size: 200%;
+      color: white;
+      padding: 12px 25px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 15px;
+      font-weight: bold;
+      transition: background-position 0.5s;
+    }
+
+    label:hover {
+      background-position: right;
+    }
+
+    .preview {
+      margin-top: 20px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .preview img {
+      width: 250px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(255,255,255,0.1);
+    }
+
+    .loading {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .spinner {
+      border: 6px solid #444;
+      border-top: 6px solid #00ff9d;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    button {
+      background: #00ff9d;
+      border: none;
+      color: #111;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #00cc7d;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>Convertidor de WEBP a PNG</h1>
+
+  <div class="upload-box" id="dropZone">
+    <p>Arrastra tu imagen .webp aquí o</p>
+    <label for="fileInput">Selecciona archivo</label>
+    <input type="file" id="fileInput" accept=".webp,image/webp">
+  </div>
+
+  <div class="preview" id="preview">
+    <img id="outputImage" alt="Vista previa">
+    <a id="downloadBtn" download="convertido.png">
+      <button>Descargar PNG</button>
+    </a>
+  </div>
+
+  <div class="loading" id="loadingScreen">
+    <div class="spinner"></div>
+    <p>Convirtiendo imagen...</p>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const dropZone = document.getElementById("dropZone");
+    const loadingScreen = document.getElementById("loadingScreen");
+    const preview = document.getElementById("preview");
+    const outputImage = document.getElementById("outputImage");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const archivo = e.dataTransfer.files[0];
+      validarArchivo(archivo);
+    });
+
+    fileInput.addEventListener("change", () => {
+      const archivo = fileInput.files[0];
+      validarArchivo(archivo);
+    });
+
+    function validarArchivo(archivo) {
+      if (!archivo) return;
+      if (!archivo.name.toLowerCase().endsWith(".webp")) {
+        alert("❌ Solo se permiten imágenes .webp");
+        return;
+      }
+      convertirAPNG(archivo);
+    }
+
+    function convertirAPNG(archivo) {
+      loadingScreen.style.display = "flex";
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+
+          const pngData = canvas.toDataURL("image/png");
+
+          outputImage.src = pngData;
+          downloadBtn.href = pngData;
+          preview.style.display = "flex";
+
+          setTimeout(() => {
+            loadingScreen.style.display = "none";
+          }, 1000);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(archivo);
+    }
+  </script>
+</body>
+</html>
